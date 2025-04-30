@@ -22,7 +22,7 @@ const StartButton = () => {
     >
       <ArrowRightIcon width={24} height={47} />
       <span className="font-normal text-[77.25px] leading-[100%] tracking-[0%] text-right align-middle">
-        {isSpinning ? 'SPINNING...' : 'START'}
+        {isSpinning ? 'SPINNING' : 'START'}
       </span>
     </motion.div>
   );

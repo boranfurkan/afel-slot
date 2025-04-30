@@ -1,8 +1,8 @@
-import TabSystem from '@/components/shared/GameTabs/TabSystem';
+import TabSystem from '@/components/shared/game-tabs/TabSystem';
 
 export default function Home() {
   return (
-    <div className="text-dark-green">
+    <div className="py-10">
       <TabSystem />
     </div>
   );

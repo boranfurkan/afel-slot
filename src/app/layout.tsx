@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${freePixelFont.className} ${supplyMediumFont.variable} antialiased`}
+        className={`${freePixelFont.className} ${supplyMediumFont.variable} antialiased container dark`}
       >
         {children}
       </body>

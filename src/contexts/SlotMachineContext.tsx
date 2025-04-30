@@ -5,7 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
-import { solToLamports, lamportsToSol } from '@/lib/utils';
+import { solToLamports } from '@/lib/utils';
 import { MOCK_USER_DATA } from '@/mock';
 
 // Define the types of icons that can appear in the slots

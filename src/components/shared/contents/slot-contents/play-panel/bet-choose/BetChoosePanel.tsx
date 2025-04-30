@@ -2,13 +2,17 @@ import SlotButton from '@/components/UI/SlotButton';
 import React from 'react';
 import Image from 'next/image';
 import { lamportsToSol } from '@/lib/utils';
+import { useSlotMachine } from '@/contexts/SlotMachineContext';
 
-interface BetChoosePanelProps {
-  userBalance: number;
-}
+const BetChoosePanel = () => {
+  const { userBalance, setBetAmount, isSpinning } = useSlotMachine();
 
-const BetChoosePanel = ({ userBalance }: BetChoosePanelProps) => {
   const userBalanceInSol = parseFloat(lamportsToSol(userBalance));
+
+  const handleBetClick = (amount: number) => {
+    if (isSpinning) return;
+    setBetAmount(amount);
+  };
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -38,28 +42,32 @@ const BetChoosePanel = ({ userBalance }: BetChoosePanelProps) => {
       <SlotButton
         className="w-full !px-3 !py-1 h-16 flex items-center justify-center"
         size="large"
-        disabled={userBalanceInSol < 0.1}
+        disabled={userBalanceInSol < 0.1 || isSpinning}
+        onClick={() => handleBetClick(0.1)}
       >
         0.1 SOL
       </SlotButton>
       <SlotButton
         className="w-full !px-3 !py-1 h-16 flex items-center justify-center"
         size="large"
-        disabled={userBalanceInSol < 0.25}
+        disabled={userBalanceInSol < 0.25 || isSpinning}
+        onClick={() => handleBetClick(0.25)}
       >
         0.25 SOL
       </SlotButton>
       <SlotButton
         className="w-full !px-3 !py-1 h-16 flex items-center justify-center"
         size="large"
-        disabled={userBalanceInSol < 0.5}
+        disabled={userBalanceInSol < 0.5 || isSpinning}
+        onClick={() => handleBetClick(0.5)}
       >
         0.5 SOL
       </SlotButton>
       <SlotButton
         className="w-full !px-3 !py-1 h-16 flex items-center justify-center"
         size="large"
-        disabled={userBalanceInSol < 1}
+        disabled={userBalanceInSol < 1 || isSpinning}
+        onClick={() => handleBetClick(1)}
       >
         1 SOL
       </SlotButton>

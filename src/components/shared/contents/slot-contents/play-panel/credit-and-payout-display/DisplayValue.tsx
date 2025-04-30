@@ -1,11 +1,17 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 interface DisplayValueProps {
   heading: string;
   value: string;
+  animate?: boolean;
 }
 
-const DisplayValue = ({ heading, value }: DisplayValueProps) => {
+const DisplayValue = ({
+  heading,
+  value,
+  animate = false,
+}: DisplayValueProps) => {
   return (
     <div className="w-full bg-[#171717]/20 rounded-[10px] p-3 flex flex-col gap-4">
       <div className="flex flex-col gap-2.5 items-center">
@@ -16,12 +22,25 @@ const DisplayValue = ({ heading, value }: DisplayValueProps) => {
       </div>
       <div className="flex items-center justify-between">
         {value.split('').map((char, index) => (
-          <span
+          <motion.span
             key={index}
             className="font-normal text-2xl leading-[100%] tracking-[0%] text-right align-middle"
+            animate={
+              animate
+                ? {
+                    scale: [1, 1.2, 1],
+                    color: ['#ffffff', '#a0c380', '#ffffff'],
+                  }
+                : {}
+            }
+            transition={{
+              duration: 0.5,
+              repeat: animate ? 1 : 0,
+              delay: index * 0.05,
+            }}
           >
             {char}
-          </span>
+          </motion.span>
         ))}
       </div>
     </div>

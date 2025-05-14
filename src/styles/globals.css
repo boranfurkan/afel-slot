@@ -154,3 +154,66 @@ input[type='number'] {
 .coin-flip-gradient {
   background: linear-gradient(180deg, #00e5ce 0%, #78ff00 100%);
 }
+
+/* Add these styles to your globals.css file to fix animation clipping issues */
+
+/* Ensure animations aren't clipped */
+.slot-machine-container {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* Fix for win animations */
+.slot-box {
+  will-change: transform, opacity, visibility;
+}
+
+/* Ensure proper stacking context for animations */
+.overflow-visible {
+  overflow: visible !important;
+}
+
+/* Fix for flying text animations */
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.2);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-100px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(1);
+  }
+}
+
+.win-text-float {
+  animation: float-up 2.5s ease-out forwards;
+}
+
+/* Fix for pulse animations */
+@keyframes pulse-no-clip {
+  0% {
+    filter: drop-shadow(0 0 0px #a0c380);
+    background-color: rgba(160, 195, 128, 0);
+  }
+  50% {
+    filter: drop-shadow(0 0 15px #a0c380);
+    background-color: rgba(160, 195, 128, 0.3);
+  }
+  100% {
+    filter: drop-shadow(0 0 0px #a0c380);
+    background-color: rgba(160, 195, 128, 0);
+  }
+}
+
+.win-pulse {
+  animation: pulse-no-clip 1.5s infinite;
+}

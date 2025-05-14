@@ -8,9 +8,9 @@ import SlotMachineController from './slot-panel/SlotMachineController';
 const SlotContents = () => {
   return (
     <SlotMachineProvider>
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full flex flex-col overflow-visible">
         <ResultShow />
-        <div className="w-full flex-1 flex h-full">
+        <div className="w-full flex-1 flex h-full overflow-visible">
           <PlayPanel />
           <SlotMachineController>
             {({ isReady, onReelStop, completedReels }) => (

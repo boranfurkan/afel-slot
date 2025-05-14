@@ -25,6 +25,7 @@ const SlotReel: React.FC<SlotReelProps> = ({
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const slotHeight = 100; // Height of each slot box
 
   // Create a sequence of icons for the reel - just enough for smooth animation
   const generateReelIcons = () => {
@@ -33,12 +34,11 @@ const SlotReel: React.FC<SlotReelProps> = ({
       (v) => typeof v === 'number'
     ) as SlotIconType[];
 
-    // Create a sequence with exactly 9 items (3 visible + buffer items)
-    // This keeps the animation smooth but limits what's rendered
+    // Create a sequence with exactly 12 items for smoother animation
     const reelIcons: SlotIconType[] = [];
 
-    // Add some randomized icons first (will be the ones that spin)
-    for (let i = 0; i < 6; i++) {
+    // Add randomized icons first (will be the ones that spin)
+    for (let i = 0; i < 9; i++) {
       const randomIndex = Math.floor(Math.random() * allIconTypes.length);
       reelIcons.push(allIconTypes[randomIndex]);
     }
@@ -60,15 +60,14 @@ const SlotReel: React.FC<SlotReelProps> = ({
     )
       return;
 
-    // Set initial positions with clear spacing
-    const slotHeight = 100;
-
+    // Set initial positions with proper spacing
     boxesRef.current.forEach((box, index) => {
-      // Set each box at its proper initial position
+      // Position each box with proper spacing
       gsap.set(box, {
         transform: `translateY(${index * slotHeight}px)`,
-        // Initially only show the first 3 items (one for each visible row)
+        // Initially only show the first few items
         visibility: index < 3 ? 'visible' : 'hidden',
+        opacity: 1,
       });
     });
 
@@ -80,11 +79,14 @@ const SlotReel: React.FC<SlotReelProps> = ({
     if (!reelRef.current || !reelContainerRef.current || !isInitialized) return;
 
     if (isSpinning && !isAnimating) {
-      startSpinAnimation();
+      // Add a small delay based on column index for a cascade effect
+      setTimeout(() => {
+        startSpinAnimation();
+      }, columnIndex * 150);
     } else if (!isSpinning && isAnimating) {
       stopSpinAnimation();
     }
-  }, [isSpinning, isInitialized]);
+  }, [isSpinning, isInitialized, columnIndex]);
 
   // Create and start the spinning animation
   const startSpinAnimation = () => {
@@ -102,35 +104,39 @@ const SlotReel: React.FC<SlotReelProps> = ({
       timelineRef.current.kill();
     }
 
-    // Reset positions - each slot box is exactly 100px tall
-    const slotHeight = 100;
-
-    // Reset positions with proper spacing - critical to prevent overlap
-    gsap.set(boxesRef.current, {
-      clearProps: 'transform, visibility',
-      transform: (i) => `translateY(${i * slotHeight}px)`,
-      visibility: (i) => (i < 3 ? 'visible' : 'hidden'),
+    // Prepare all boxes for animation - critical first step
+    boxesRef.current.forEach((box, index) => {
+      // Prepare each box with initial state but don't change visibility yet
+      gsap.set(box, {
+        transform: `translateY(${index * slotHeight}px)`,
+      });
     });
+
+    // Pre-position off-screen boxes for smooth entry
+    const boxCount = boxesRef.current.length;
+    const visibleCount = 3; // Number of visible slots
 
     // Create a new timeline for continuous spinning
     const tl = gsap.timeline({
       repeat: -1,
       onRepeat: () => {
-        // Randomize visible icons on each repeat for variety
+        // Randomize icons that are currently off-screen for variety
         const allIconTypes = Object.values(SlotIconType).filter(
           (v) => typeof v === 'number'
         ) as SlotIconType[];
 
-        boxesRef.current.forEach((box, index) => {
-          if (index < boxesRef.current.length - 3) {
+        // Only update icons that are currently off-screen
+        boxesRef.current.forEach((box) => {
+          const yPos = Number(gsap.getProperty(box, 'y'));
+          if (yPos < 0 || yPos >= slotHeight * visibleCount) {
             const iconElement = box.querySelector('.slot-icon-container');
             if (iconElement) {
-              // Fade transition when changing icons
+              // Update icon that's off-screen
               gsap.to(iconElement, {
                 opacity: 0,
-                duration: 0.1,
+                duration: 0.05,
                 onComplete: () => {
-                  gsap.to(iconElement, { opacity: 1, duration: 0.1 });
+                  gsap.to(iconElement, { opacity: 1, duration: 0.05 });
                 },
               });
             }
@@ -140,9 +146,22 @@ const SlotReel: React.FC<SlotReelProps> = ({
     });
 
     // Calculate the total height of the reel
-    const totalHeight = slotHeight * boxesRef.current.length;
+    const totalHeight = slotHeight * boxCount;
 
-    // Animate each box with careful position management
+    // First, make sure all boxes are properly positioned
+    boxesRef.current.forEach((box, i) => {
+      // Ensure consistent starting state
+      const initialY = i * slotHeight;
+      gsap.set(box, {
+        transform: `translateY(${initialY}px)`,
+        visibility:
+          initialY >= 0 && initialY < slotHeight * visibleCount
+            ? 'visible'
+            : 'hidden',
+      });
+    });
+
+    // Now start the continuous animation with a slightly staggered start for each box
     boxesRef.current.forEach((box, i) => {
       // Store the initial position
       const initialY = i * slotHeight;
@@ -156,13 +175,18 @@ const SlotReel: React.FC<SlotReelProps> = ({
           onUpdate: function () {
             const progress = this.progress(); // Animation progress (0-1)
             const offset = progress * totalHeight; // How far we've moved
-            let newY = (initialY + offset) % totalHeight; // Wrap around using modulo
+            let newY = (initialY - offset) % totalHeight; // Moving upward
 
-            // Ensure we keep items properly positioned
+            // Wrap around when going off the top
+            if (newY < 0) {
+              newY += totalHeight;
+            }
+
+            // Update position
             gsap.set(box, { transform: `translateY(${newY}px)` });
 
-            // Hide elements that are out of the visible range (3 slots)
-            const isVisible = newY >= 0 && newY < slotHeight * 3;
+            // Show only elements in the visible area
+            const isVisible = newY >= 0 && newY < slotHeight * visibleCount;
             gsap.set(box, { visibility: isVisible ? 'visible' : 'hidden' });
           },
         },
@@ -170,12 +194,9 @@ const SlotReel: React.FC<SlotReelProps> = ({
       );
     });
 
-    // Add delay based on column index for cascading effect
-    tl.delay(columnIndex * 0.2);
-
     // Add ease-in at the beginning for realistic acceleration
-    tl.timeScale(0.5);
-    gsap.to(tl, { timeScale: 3, duration: 1, ease: 'power2.in' });
+    tl.timeScale(0.8);
+    gsap.to(tl, { timeScale: 3, duration: 0.6, ease: 'power2.in' });
 
     timelineRef.current = tl;
   };
@@ -189,13 +210,10 @@ const SlotReel: React.FC<SlotReelProps> = ({
     )
       return;
 
-    // Variables for positioning
-    const slotHeight = 100; // Height of each slot box
-
-    // Gradually slow down the animation
+    // Gradually slow down the animation with a delay based on column index
     gsap.to(timelineRef.current, {
-      timeScale: 0.5,
-      duration: 0.5 + columnIndex * 0.2,
+      timeScale: 0.3,
+      duration: 0.8 + columnIndex * 0.3,
       ease: 'power2.out',
       onComplete: () => {
         // Kill the repeating timeline
@@ -287,12 +305,25 @@ const SlotReel: React.FC<SlotReelProps> = ({
           !isSpinning && (
             <motion.div
               key={`win-highlight-${columnIndex}-${rowIndex}`}
-              className="absolute inset-x-0 h-[100px] rounded-md ring-4 ring-[#a0c380] bg-[#a0c380]/20 pointer-events-none z-20"
-              style={{ top: `${rowIndex * 100}px` }}
+              className="absolute inset-x-0 h-[100px] rounded-md pointer-events-none z-20"
+              style={{
+                top: `${rowIndex * 100}px`,
+                // Use filter for glow effect instead of box-shadow to avoid clipping
+                filter: 'none',
+                willChange: 'filter, background-color',
+              }}
               initial={{ opacity: 0 }}
               animate={{
-                opacity: [0, 0.8, 0],
-                scale: [0.9, 1.05, 1],
+                filter: [
+                  'drop-shadow(0 0 0px #a0c380)',
+                  'drop-shadow(0 0 15px #a0c380)',
+                  'drop-shadow(0 0 0px #a0c380)',
+                ],
+                backgroundColor: [
+                  'rgba(160, 195, 128, 0)',
+                  'rgba(160, 195, 128, 0.3)',
+                  'rgba(160, 195, 128, 0)',
+                ],
               }}
               transition={{
                 duration: 1.5,

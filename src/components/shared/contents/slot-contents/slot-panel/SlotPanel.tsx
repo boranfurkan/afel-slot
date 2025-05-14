@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { SlotIconType, useSlotMachine } from '@/contexts/SlotMachineContext';
 import SlotReel from './SlotReel';
+import WinMultiplierEffect from './WinMultiplierEffect';
 
 interface SlotPanelProps {
   onReelStop: (columnIndex: number) => void;
@@ -17,6 +18,23 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
 }) => {
   const { slotValues, isSpinning, winResult } = useSlotMachine();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  // Update container size when it changes
+  useEffect(() => {
+    if (containerRef.current) {
+      const updateSize = () => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          setContainerSize({ width: rect.width, height: rect.height });
+        }
+      };
+
+      updateSize();
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+    }
+  }, []);
 
   // Convert the flat slotValues array to a column-based structure for our reels
   const getColumnValues = (columnIndex: number): SlotIconType[] => {
@@ -49,37 +67,48 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
 
   const reelDimensions = calculateReelDimensions();
 
-  // Calculate the winning line paths based on actual DOM positions
+  // Calculate the precise winning line paths based on actual DOM positions
   const calculateWinningLinePaths = () => {
-    if (!winResult || !winResult.isWin || !containerRef.current) return [];
+    if (!winResult?.isWin || !containerRef.current) return [];
 
-    // Get container dimensions for accurate positioning
-    const containerRect = containerRef.current.getBoundingClientRect();
+    // Get container dimensions
+    const { width, height } = containerSize;
+    const reelWidth = width / 3;
+    const slotHeight = height / 3;
 
-    return winResult.winningPatterns.map((pattern) => {
-      // Calculate center points for each winning slot
+    return winResult.winningPatterns.map((pattern, lineIndex) => {
+      // Calculate exact pixel coordinates for each winning slot
       const points = pattern.map((slotIndex) => {
         const row = Math.floor(slotIndex / 3);
         const col = slotIndex % 3;
 
-        // Calculate center coordinates of each slot
-        // These calculations need to match the actual positions in the rendered grid
-        const x = col * 33.33 + 16.665; // Center of each column (as percentage)
-        const y = row * 33.33 + 16.665; // Center of each row (as percentage)
+        // Calculate center coordinates in pixels
+        const x = col * reelWidth + reelWidth / 2;
+        const y = row * slotHeight + slotHeight / 2;
 
         return { x, y };
       });
 
-      // Create SVG path with percentages rather than fixed pixels
+      // Create SVG path with precise pixel coordinates
       return {
-        path: `M ${points[0].x}% ${points[0].y}% L ${points[1].x}% ${points[1].y}% L ${points[2].x}% ${points[2].y}%`,
+        path: `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L ${points[2].x} ${points[2].y}`,
         index: pattern.join('-'),
+        color: getWinningLineColor(lineIndex),
       };
     });
   };
 
+  // Get different colors for multiple winning lines
+  const getWinningLineColor = (index: number) => {
+    const colors = ['#a0c380', '#78ff00', '#6c924a'];
+    return colors[index % colors.length];
+  };
+
   return (
-    <div className="w-full relative border-l-2 border-[#8db170]">
+    <div
+      className="w-full relative border-l-2 border-[#8db170] overflow-visible"
+      style={{ isolation: 'isolate' }}
+    >
       <Image
         src="/slot-background.png"
         fill
@@ -91,11 +120,12 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center py-6">
         <div
           ref={containerRef}
-          className="slot-machine-container w-[90%] bg-black/30 rounded-lg backdrop-blur-sm p-6 relative"
+          className="slot-machine-container w-[90%] bg-black/30 rounded-lg backdrop-blur-sm p-6 relative overflow-visible"
+          style={{ zIndex: 20 }}
         >
           {/* Slot reels - fixed dimensions for perfect alignment */}
           <div
-            className="grid grid-cols-3 gap-4"
+            className="grid grid-cols-3 gap-4 relative"
             style={{ height: reelDimensions.height }}
           >
             {[0, 1, 2].map((columnIndex) => (
@@ -115,31 +145,46 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
             winResult.isWin &&
             !isSpinning &&
             completedReels === 3 && (
-              <div className="absolute inset-0 pointer-events-none">
-                <svg className="w-full h-full" preserveAspectRatio="none">
-                  {calculateWinningLinePaths().map(({ path, index }) => (
-                    <motion.path
-                      key={`win-line-${index}`}
-                      d={path}
-                      stroke="#a0c380"
-                      strokeWidth="4"
-                      fill="none"
-                      strokeLinecap="round"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{
-                        pathLength: 1,
-                        opacity: [0, 0.8, 0.8, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        repeatType: 'loop',
-                        repeatDelay: 0.5,
-                      }}
-                    />
-                  ))}
-                </svg>
-              </div>
+              <svg
+                className="absolute inset-0 w-full h-full z-50 overflow-visible"
+                preserveAspectRatio="none"
+                style={{ pointerEvents: 'none' }}
+              >
+                {calculateWinningLinePaths().map(({ path, index, color }) => (
+                  <motion.path
+                    key={`win-line-${index}`}
+                    d={path}
+                    stroke={color}
+                    strokeWidth="4"
+                    fill="none"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{
+                      pathLength: 1,
+                      opacity: [0, 0.8, 0.8, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: 'loop',
+                      repeatDelay: 0.5,
+                    }}
+                  />
+                ))}
+              </svg>
+            )}
+
+          {/* Win multiplier flying text effect */}
+          {winResult &&
+            winResult.isWin &&
+            !isSpinning &&
+            completedReels === 3 && (
+              <WinMultiplierEffect
+                multiplier={winResult.multiplier}
+                winAmount={winResult.winAmount}
+                isVisible={!isSpinning && completedReels === 3}
+                winningPatterns={winResult.winningPatterns}
+              />
             )}
         </div>
 

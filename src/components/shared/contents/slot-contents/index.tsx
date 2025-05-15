@@ -1,15 +1,15 @@
 import React from 'react';
-import ResultShow from './ResultShow';
 import PlayPanel from './play-panel';
 import SlotPanel from './slot-panel/SlotPanel';
 import { SlotMachineProvider } from '@/contexts/SlotMachineContext';
 import SlotMachineController from './slot-panel/SlotMachineController';
+import ResultContainer from './results-container';
 
 const SlotContents = () => {
   return (
     <SlotMachineProvider>
       <div className="w-full h-full flex flex-col overflow-visible">
-        <ResultShow />
+        <ResultContainer />
         <div className="w-full flex-1 flex h-full overflow-visible">
           <PlayPanel />
           <SlotMachineController>

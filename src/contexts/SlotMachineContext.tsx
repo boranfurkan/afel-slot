@@ -18,34 +18,34 @@ export enum SlotIconType {
   PEAR = 6,
 }
 
-// Map icons to their respective multipliers based on the game logic
+// Map icons to their respective multipliers based on the game logic (from design image)
 const ICON_MULTIPLIERS = {
   // Full matches (all three the same)
-  [SlotIconType.AFEL]: 1.2,
-  [SlotIconType.AVOCADO]: 1.2,
-  [SlotIconType.BANANA]: 2,
-  [SlotIconType.CHERRIES]: 3,
-  [SlotIconType.MANGO]: 5,
-  [SlotIconType.PEAR]: 10,
+  [SlotIconType.AFEL]: 1.2, // 1-1-1 x1.2
+  [SlotIconType.AVOCADO]: 1.2, // 2-2-2 x1.2
+  [SlotIconType.BANANA]: 2, // 3-3-3 x2
+  [SlotIconType.CHERRIES]: 3, // 4-4-4 x3
+  [SlotIconType.MANGO]: 5, // 5-5-5 x5
+  [SlotIconType.PEAR]: 10, // 6-6-6 x10
 };
 
-// Special combinations with their multipliers
+// Special combinations with their multipliers (from design image)
 const SPECIAL_COMBINATIONS = [
   {
     combo: [SlotIconType.AFEL, SlotIconType.AVOCADO, SlotIconType.AVOCADO],
-    multiplier: 1.5,
+    multiplier: 1.5, // 1-2-2 x1.5
   },
   {
     combo: [SlotIconType.BANANA, SlotIconType.CHERRIES, SlotIconType.BANANA],
-    multiplier: 2.5,
+    multiplier: 2.5, // 3-4-3 x2.5
   },
   {
     combo: [SlotIconType.AVOCADO, SlotIconType.MANGO, SlotIconType.PEAR],
-    multiplier: 3,
+    multiplier: 3, // 2-5-6 x3
   },
   {
-    combo: [SlotIconType.CHERRIES, SlotIconType.PEAR, SlotIconType.MANGO],
-    multiplier: 4,
+    combo: [SlotIconType.CHERRIES, SlotIconType.MANGO, SlotIconType.PEAR],
+    multiplier: 4, // 4-5-6 x4
   },
 ];
 

@@ -25,7 +25,7 @@ const SlotReel: React.FC<SlotReelProps> = ({
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const slotHeight = 100; // Height of each slot box
+  const slotHeight = 150; // Increased from 100px to 150px for taller reels
 
   // Create a sequence of icons for the reel - just enough for smooth animation
   const generateReelIcons = () => {
@@ -273,23 +273,24 @@ const SlotReel: React.FC<SlotReelProps> = ({
           <div className="h-full w-px bg-white/20"></div>
         </div>
 
-        {/* Slot boxes - each box has fixed height of 100px */}
+        {/* Slot boxes - each box now has fixed height of 150px */}
         {reelIcons.map((iconType, index) => (
           <div
             key={`slot-box-${columnIndex}-${index}`}
             ref={(el) => {
               if (el) boxesRef.current[index] = el;
             }}
-            className="slot-box absolute w-full h-[100px] flex items-center justify-center"
+            className="slot-box absolute w-full h-[150px] flex items-center justify-center"
             style={{
               top: 0,
-              transform: `translateY(${index * 100}px)`,
+              transform: `translateY(${index * 150}px)`,
               visibility: index < 3 ? 'visible' : 'hidden', // Only show first 3 initially
               zIndex: 10 - (index % 10), // Ensure proper stacking during animation
             }}
           >
             <div className="slot-icon-container w-full h-full flex items-center justify-center">
-              <SlotIcon type={iconType} size={64} className="p-1" />
+              <SlotIcon type={iconType} size={100} className="p-1" />{' '}
+              {/* Increased icon size */}
             </div>
           </div>
         ))}
@@ -305,10 +306,9 @@ const SlotReel: React.FC<SlotReelProps> = ({
           !isSpinning && (
             <motion.div
               key={`win-highlight-${columnIndex}-${rowIndex}`}
-              className="absolute inset-x-0 h-[100px] rounded-md pointer-events-none z-20"
+              className="absolute inset-x-0 h-[150px] rounded-md pointer-events-none z-20"
               style={{
-                top: `${rowIndex * 100}px`,
-                // Use filter for glow effect instead of box-shadow to avoid clipping
+                top: `${rowIndex * 150}px`, // Position adjusted for taller slots
                 filter: 'none',
                 willChange: 'filter, background-color',
               }}

@@ -59,50 +59,122 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
 
   // Calculate dimensions to ensure perfect 3x3 grid
   const calculateReelDimensions = () => {
-    // Each reel should have exactly 3 slots visible (100px each)
+    // Each reel should have exactly 3 slots visible (150px each for taller reels)
     return {
-      height: '300px', // 3 rows at 100px each
+      height: '450px', // 3 rows at 150px each
     };
   };
 
   const reelDimensions = calculateReelDimensions();
 
-  // Calculate the precise winning line paths based on actual DOM positions
-  const calculateWinningLinePaths = () => {
-    if (!winResult?.isWin || !containerRef.current) return [];
+  // Calculate the path for the winning line based on the pattern
+  const calculateWinningLinePath = () => {
+    if (
+      !winResult?.isWin ||
+      !containerRef.current ||
+      winResult.winningPatterns.length === 0
+    )
+      return null;
 
     // Get container dimensions
     const { width, height } = containerSize;
     const reelWidth = width / 3;
     const slotHeight = height / 3;
 
-    return winResult.winningPatterns.map((pattern, lineIndex) => {
-      // Calculate exact pixel coordinates for each winning slot
-      const points = pattern.map((slotIndex) => {
-        const row = Math.floor(slotIndex / 3);
-        const col = slotIndex % 3;
+    // We'll take the first winning pattern to draw the line
+    const pattern = winResult.winningPatterns[0];
 
-        // Calculate center coordinates in pixels
-        const x = col * reelWidth + reelWidth / 2;
-        const y = row * slotHeight + slotHeight / 2;
+    // Calculate exact pixel coordinates for each winning slot
+    const points = pattern.map((slotIndex) => {
+      const row = Math.floor(slotIndex / 3);
+      const col = slotIndex % 3;
 
-        return { x, y };
-      });
+      // Calculate center coordinates in pixels
+      const x = col * reelWidth + reelWidth / 2;
+      const y = row * slotHeight + slotHeight / 2;
 
-      // Create SVG path with precise pixel coordinates
-      return {
-        path: `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L ${points[2].x} ${points[2].y}`,
-        index: pattern.join('-'),
-        color: getWinningLineColor(lineIndex),
-      };
+      return { x, y };
     });
+
+    // Calculate the path based on the pattern orientation
+    // Row win, column win, or diagonal win
+    if (
+      (pattern[0] === 0 && pattern[1] === 1 && pattern[2] === 2) || // Row 1
+      (pattern[0] === 3 && pattern[1] === 4 && pattern[2] === 5) || // Row 2
+      (pattern[0] === 6 && pattern[1] === 7 && pattern[2] === 8) // Row 3
+    ) {
+      // Horizontal line - Draw a single curved path through the three points
+      return {
+        startX: points[0].x,
+        startY: points[0].y,
+        endX: points[2].x,
+        endY: points[2].y,
+        controlX1: points[0].x + reelWidth / 2,
+        controlY1: points[0].y - slotHeight / 4,
+        controlX2: points[2].x - reelWidth / 2,
+        controlY2: points[2].y - slotHeight / 4,
+      };
+    } else if (
+      (pattern[0] === 0 && pattern[1] === 3 && pattern[2] === 6) || // Column 1
+      (pattern[0] === 1 && pattern[1] === 4 && pattern[2] === 7) || // Column 2
+      (pattern[0] === 2 && pattern[1] === 5 && pattern[2] === 8) // Column 3
+    ) {
+      // Vertical line - Draw a single curved path through the three points
+      return {
+        startX: points[0].x,
+        startY: points[0].y,
+        endX: points[2].x,
+        endY: points[2].y,
+        controlX1: points[0].x + reelWidth / 4,
+        controlY1: points[0].y + slotHeight / 2,
+        controlX2: points[2].x + reelWidth / 4,
+        controlY2: points[2].y - slotHeight / 2,
+      };
+    } else if (pattern[0] === 0 && pattern[1] === 4 && pattern[2] === 8) {
+      // Diagonal from top-left to bottom-right
+      return {
+        startX: points[0].x,
+        startY: points[0].y,
+        endX: points[2].x,
+        endY: points[2].y,
+        controlX1: points[1].x - reelWidth / 4,
+        controlY1: points[1].y - slotHeight / 4,
+        controlX2: points[1].x + reelWidth / 4,
+        controlY2: points[1].y + slotHeight / 4,
+      };
+    } else if (pattern[0] === 2 && pattern[1] === 4 && pattern[2] === 6) {
+      // Diagonal from top-right to bottom-left
+      return {
+        startX: points[0].x,
+        startY: points[0].y,
+        endX: points[2].x,
+        endY: points[2].y,
+        controlX1: points[1].x + reelWidth / 4,
+        controlY1: points[1].y - slotHeight / 4,
+        controlX2: points[1].x - reelWidth / 4,
+        controlY2: points[1].y + slotHeight / 4,
+      };
+    } else {
+      // Special combination
+      // For special combinations, we'll just draw a direct curve through the points
+      return {
+        startX: points[0].x,
+        startY: points[0].y,
+        endX: points[2].x,
+        endY: points[2].y,
+        controlX1: points[1].x,
+        controlY1: points[1].y - slotHeight / 3,
+        controlX2: points[1].x,
+        controlY2: points[1].y + slotHeight / 3,
+      };
+    }
   };
 
-  // Get different colors for multiple winning lines
-  const getWinningLineColor = (index: number) => {
-    const colors = ['#a0c380', '#78ff00', '#6c924a'];
-    return colors[index % colors.length];
-  };
+  // Calculate the win path only once when needed
+  const winPath =
+    winResult?.isWin && !isSpinning && completedReels === 3
+      ? calculateWinningLinePath()
+      : null;
 
   return (
     <div
@@ -123,6 +195,29 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
           className="slot-machine-container w-[90%] bg-black/30 rounded-lg backdrop-blur-sm p-6 relative overflow-visible"
           style={{ zIndex: 20 }}
         >
+          {/* Row indicators on the left */}
+          <div
+            className="absolute left-0 top-0 h-full flex flex-col justify-between items-center"
+            style={{
+              transform: 'translateX(-50%)',
+              height: reelDimensions.height,
+              marginTop: '6px',
+            }}
+          >
+            {[1, 2, 3].map((row, idx) => (
+              <div
+                key={`left-row-${row}`}
+                className="w-10 h-10 rounded-full bg-[#4DFF00] flex items-center justify-center text-xl font-bold text-black"
+                style={{
+                  marginTop: idx === 0 ? '10%' : 0,
+                  marginBottom: idx === 2 ? '10%' : 0,
+                }}
+              >
+                {row}
+              </div>
+            ))}
+          </div>
+
           {/* Slot reels - fixed dimensions for perfect alignment */}
           <div
             className="grid grid-cols-3 gap-4 relative"
@@ -140,39 +235,82 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
             ))}
           </div>
 
-          {/* Win lines - positioned absolutely over the entire container */}
-          {winResult &&
-            winResult.isWin &&
-            !isSpinning &&
-            completedReels === 3 && (
-              <svg
-                className="absolute inset-0 w-full h-full z-50 overflow-visible"
-                preserveAspectRatio="none"
-                style={{ pointerEvents: 'none' }}
+          {/* Row indicators on the right */}
+          <div
+            className="absolute right-0 top-0 h-full flex flex-col justify-between items-center"
+            style={{
+              transform: 'translateX(50%)',
+              height: reelDimensions.height,
+              marginTop: '6px',
+            }}
+          >
+            {[1, 2, 3].map((row, idx) => (
+              <div
+                key={`right-row-${row}`}
+                className="w-10 h-10 rounded-full bg-[#4DFF00] flex items-center justify-center text-xl font-bold text-black"
+                style={{
+                  marginTop: idx === 0 ? '10%' : 0,
+                  marginBottom: idx === 2 ? '10%' : 0,
+                }}
               >
-                {calculateWinningLinePaths().map(({ path, index, color }) => (
-                  <motion.path
-                    key={`win-line-${index}`}
-                    d={path}
-                    stroke={color}
-                    strokeWidth="4"
-                    fill="none"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{
-                      pathLength: 1,
-                      opacity: [0, 0.8, 0.8, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: 'loop',
-                      repeatDelay: 0.5,
-                    }}
+                {row}
+              </div>
+            ))}
+          </div>
+
+          {/* Win line - Single curved path exactly like the design image */}
+          {winPath && (
+            <svg
+              className="absolute inset-0 w-full h-full z-50 overflow-visible"
+              preserveAspectRatio="none"
+              style={{ pointerEvents: 'none' }}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox={`0 0 ${containerSize.width} ${containerSize.height}`}
+            >
+              <defs>
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+                <linearGradient
+                  id="lineGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#4DFF00" />
+                  <stop offset="100%" stopColor="#009705" />
+                </linearGradient>
+                <filter
+                  id="winLineFilter"
+                  x="-20%"
+                  y="-20%"
+                  width="140%"
+                  height="140%"
+                  filterUnits="userSpaceOnUse"
+                >
+                  <feDropShadow
+                    dx="5.91"
+                    dy="3.94"
+                    stdDeviation="5.221"
+                    floodColor="#15FF00"
+                    floodOpacity="1"
                   />
-                ))}
-              </svg>
-            )}
+                </filter>
+              </defs>
+              <motion.path
+                d={`M ${winPath.startX} ${winPath.startY} C ${winPath.controlX1} ${winPath.controlY1}, ${winPath.controlX2} ${winPath.controlY2}, ${winPath.endX} ${winPath.endY}`}
+                stroke="url(#lineGradient)"
+                strokeWidth="5.91"
+                fill="none"
+                filter="url(#winLineFilter)"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+              />
+            </svg>
+          )}
 
           {/* Win multiplier flying text effect */}
           {winResult &&
@@ -187,22 +325,6 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
               />
             )}
         </div>
-
-        {/* Win information at the bottom */}
-        {winResult && winResult.isWin && !isSpinning && (
-          <motion.div
-            className="absolute bottom-4 right-4 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="slot-gradient-to-bottom px-4 py-2 rounded-full inline-flex items-center justify-center">
-              <span className="font-normal text-xl leading-[100%] tracking-[0%] text-right align-middle uppercase">
-                WIN: {winResult.multiplier}x
-              </span>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

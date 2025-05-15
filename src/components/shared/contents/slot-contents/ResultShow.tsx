@@ -16,6 +16,7 @@ const ResultShow = () => {
   // Only show result when not spinning and we have a result
   const showResult = !isSpinning && winResult !== null;
   const isWin = showResult && winResult.isWin;
+  const isLose = showResult && !winResult.isWin;
 
   // Generate particles for win animation
   useEffect(() => {
@@ -153,7 +154,7 @@ const ResultShow = () => {
         )}
 
         {/* Shaky effect for lose */}
-        {showResult && !isWin && (
+        {isLose && (
           <motion.div
             className="absolute inset-0 rounded-[8px] z-0 bg-[#FF0018]/5"
             animate={{

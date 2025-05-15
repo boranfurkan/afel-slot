@@ -27,28 +27,24 @@ const WinningLine: React.FC<WinningLineProps> = ({
 }) => {
   // Calculate positions for each slot in the pattern
   const positions = useMemo(() => {
+    // Calculate cell dimensions
+    const cellWidth = containerWidth / 3;
+    const cellHeight = containerHeight / 3;
+
+    // Map each pattern index to precise coordinates
     return pattern.map((slotIndex) => {
       const row = Math.floor(slotIndex / 3);
       const col = slotIndex % 3;
 
-      const paddingX = containerWidth * 0.04;
-      const paddingY = containerHeight * 0.05;
-      const gapX = containerWidth * 0.035;
-
-      const availableWidth = containerWidth - paddingX * 2;
-      const availableHeight = containerHeight - paddingY * 2;
-
-      const cellWidth = availableWidth / 3 - (gapX * 2) / 3;
-      const cellHeight = availableHeight / 3;
-
+      // Calculate exact center of each cell
       return {
-        x: paddingX + col * (cellWidth + gapX) + cellWidth / 2 + 30, // Added X offset
-        y: paddingY + row * cellHeight + cellHeight / 2, // No Y offset needed
+        x: col * cellWidth + cellWidth / 2,
+        y: row * cellHeight + cellHeight / 2,
       };
     });
   }, [pattern, containerWidth, containerHeight]);
 
-  // Generate SVG path data
+  // Generate SVG path data connecting all points
   const pathData = useMemo(() => {
     if (positions.length < 2) return '';
 
@@ -74,8 +70,8 @@ const WinningLine: React.FC<WinningLineProps> = ({
     const isDiagonal = patternType.startsWith('diag');
     const isSpecial = patternType === WinPatternType.SPECIAL;
 
-    // Default animation for all pattern types
-    const defaultAnimation = {
+    // Default animation
+    const defaultVariants = {
       line: {
         initial: { pathLength: 0, opacity: 0 },
         animate: {
@@ -95,22 +91,15 @@ const WinningLine: React.FC<WinningLineProps> = ({
       },
     };
 
-    // Specific animations based on pattern type
+    // Pattern-specific variations
     if (isRow) {
       return {
-        ...defaultAnimation,
+        ...defaultVariants,
         line: {
-          ...defaultAnimation.line,
+          ...defaultVariants.line,
           animate: {
-            ...defaultAnimation.line.animate,
-            x: [0, 6, -6, 0],
-          },
-        },
-        dot: {
-          ...defaultAnimation.dot,
-          animate: {
-            ...defaultAnimation.dot.animate,
-            x: [0, 3, -3, 0],
+            ...defaultVariants.line.animate,
+            x: [0, 5, -5, 0],
           },
         },
       };
@@ -118,19 +107,12 @@ const WinningLine: React.FC<WinningLineProps> = ({
 
     if (isColumn) {
       return {
-        ...defaultAnimation,
+        ...defaultVariants,
         line: {
-          ...defaultAnimation.line,
+          ...defaultVariants.line,
           animate: {
-            ...defaultAnimation.line.animate,
-            y: [0, 6, -6, 0],
-          },
-        },
-        dot: {
-          ...defaultAnimation.dot,
-          animate: {
-            ...defaultAnimation.dot.animate,
-            y: [0, 3, -3, 0],
+            ...defaultVariants.line.animate,
+            y: [0, 5, -5, 0],
           },
         },
       };
@@ -138,68 +120,21 @@ const WinningLine: React.FC<WinningLineProps> = ({
 
     if (isDiagonal) {
       return {
-        ...defaultAnimation,
+        ...defaultVariants,
         line: {
-          ...defaultAnimation.line,
+          ...defaultVariants.line,
           animate: {
-            ...defaultAnimation.line.animate,
-            scale: [1, 1.05, 1.05, 1],
-            rotate: [0, 0.5, -0.5, 0],
-            strokeWidth: [lineWidth, lineWidth + 3, lineWidth + 3, lineWidth],
-          },
-        },
-        dot: {
-          ...defaultAnimation.dot,
-          animate: {
-            ...defaultAnimation.dot.animate,
-            rotate: [0, 180, 360, 540],
+            ...defaultVariants.line.animate,
+            scale: [1, 1.03, 1.03, 1],
           },
         },
       };
     }
 
-    if (isSpecial) {
-      return {
-        ...defaultAnimation,
-        line: {
-          ...defaultAnimation.line,
-          animate: {
-            ...defaultAnimation.line.animate,
-            scale: [1, 1.08, 0.95, 1],
-            filter: [
-              'brightness(1)',
-              'brightness(1.7)',
-              'brightness(1.7)',
-              'brightness(1)',
-            ],
-            strokeWidth: [
-              lineWidth,
-              lineWidth * 1.5,
-              lineWidth * 1.5,
-              lineWidth,
-            ],
-          },
-        },
-        dot: {
-          ...defaultAnimation.dot,
-          animate: {
-            ...defaultAnimation.dot.animate,
-            scale: [0, 1.5, 1.5, 0],
-            filter: [
-              'brightness(1)',
-              'brightness(1.7)',
-              'brightness(1.7)',
-              'brightness(1)',
-            ],
-          },
-        },
-      };
-    }
-
-    return defaultAnimation;
+    return defaultVariants;
   }, [patternType, animationDuration, lineWidth]);
 
-  // Get pattern color based on type
+  // Get pattern color based on pattern type
   const patternColor = useMemo(() => {
     switch (patternType) {
       case WinPatternType.ROW_1:
@@ -243,41 +178,49 @@ const WinningLine: React.FC<WinningLineProps> = ({
       className="absolute top-0 left-0 z-40 pointer-events-none"
       role="img"
     >
-      <defs>
-        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-
       {/* Debug grid overlay */}
       {debug && (
         <g className="debug-grid">
-          {/* Vertical grid lines */}
-          {[0, 1, 2, 3].map((i) => (
+          {/* Vertical cell dividers */}
+          {[1, 2].map((i) => (
             <line
               key={`vgrid-${i}`}
-              x1={containerWidth * 0.065 + i * containerWidth * 0.29}
+              x1={(i * containerWidth) / 3}
               y1={0}
-              x2={containerWidth * 0.065 + i * containerWidth * 0.29}
+              x2={(i * containerWidth) / 3}
               y2={containerHeight}
-              stroke="rgba(255, 0, 0, 0.2)"
+              stroke="rgba(255, 0, 0, 0.3)"
               strokeWidth={1}
+              strokeDasharray="5,5"
             />
           ))}
 
-          {/* Horizontal grid lines */}
-          {[0, 1, 2, 3].map((i) => (
+          {/* Horizontal cell dividers */}
+          {[1, 2].map((i) => (
             <line
               key={`hgrid-${i}`}
               x1={0}
-              y1={containerHeight * 0.08 + i * containerHeight * 0.28}
+              y1={(i * containerHeight) / 3}
               x2={containerWidth}
-              y2={containerHeight * 0.08 + i * containerHeight * 0.28}
-              stroke="rgba(255, 0, 0, 0.2)"
+              y2={(i * containerHeight) / 3}
+              stroke="rgba(255, 0, 0, 0.3)"
               strokeWidth={1}
+              strokeDasharray="5,5"
             />
           ))}
+
+          {/* Cell centers */}
+          {[0, 1, 2].map((row) =>
+            [0, 1, 2].map((col) => (
+              <circle
+                key={`center-${row}-${col}`}
+                cx={(col * containerWidth) / 3 + containerWidth / 6}
+                cy={(row * containerHeight) / 3 + containerHeight / 6}
+                r={4}
+                fill="rgba(255, 255, 0, 0.5)"
+              />
+            ))
+          )}
         </g>
       )}
 
@@ -308,50 +251,25 @@ const WinningLine: React.FC<WinningLineProps> = ({
         style={{ filter: `drop-shadow(0 0 8px ${patternColor})` }}
       />
 
-      {/* Position marker dots */}
+      {/* Position dots */}
       {positions.map((pos, index) => {
         const positionRatio = index / (positions.length - 1);
 
         return (
           <React.Fragment key={`position-${index}-${pattern.join('-')}`}>
-            {/* Debug marker */}
+            {/* Debug position marker */}
             {debug && (
               <circle
                 cx={pos.x}
                 cy={pos.y}
-                r={4}
+                r={5}
                 fill="red"
                 stroke="white"
                 strokeWidth={1}
               />
             )}
 
-            {/* Glow circle */}
-            <motion.circle
-              cx={pos.x}
-              cy={pos.y}
-              r={16}
-              fill={patternGlowColor}
-              initial={{ scale: 0 }}
-              animate={{
-                scale: [0, 1, 1, 0],
-                opacity: [0.4, 0.7, 0.7, 0.4],
-              }}
-              transition={{
-                duration: animationDuration,
-                ease: [0.22, 1, 0.36, 1],
-                times: [
-                  positionRatio * 0.3,
-                  positionRatio * 0.3 + 0.1,
-                  0.7 + (1 - positionRatio) * 0.25,
-                  0.7 + (1 - positionRatio) * 0.25 + 0.1,
-                ],
-                repeat: Infinity,
-                repeatDelay: 0.2,
-              }}
-            />
-
-            {/* Main circle */}
+            {/* Animated dot */}
             <motion.circle
               cx={pos.x}
               cy={pos.y}
@@ -379,31 +297,6 @@ const WinningLine: React.FC<WinningLineProps> = ({
           </React.Fragment>
         );
       })}
-
-      {/* Special effect for special patterns */}
-      {isSpecial && (
-        <motion.rect
-          x={0}
-          y={0}
-          width={containerWidth}
-          height={containerHeight}
-          fill="none"
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0, 0.1, 0],
-          }}
-          transition={{
-            duration: animationDuration * 0.7,
-            ease: 'easeInOut',
-            repeat: Infinity,
-            repeatDelay: 0.2,
-          }}
-          style={{
-            filter: `blur(20px)`,
-            background: `radial-gradient(circle at center, ${patternColor}44 0%, transparent 70%)`,
-          }}
-        />
-      )}
     </svg>
   );
 };

@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
+import useSound from 'use-sound';
 import { solToLamports } from '@/lib/utils';
 import { MOCK_USER_DATA } from '@/mock';
 import {
@@ -54,6 +55,9 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
   const [spinCompleted, setSpinCompleted] = useState(true);
 
   const slotRefs = useRef<any[]>([]);
+
+  // Sound hooks
+  const [playReelsBegin] = useSound('/sounds/reels-begin.mp3');
 
   const resetWinResult = useCallback(() => {
     setWinResult(null);
@@ -112,6 +116,9 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
     if (isSpinning || !spinCompleted || solToLamports(betAmount) > userBalance)
       return;
 
+    // Play the reels begin sound when spinning starts
+    playReelsBegin();
+
     resetWinResult();
     setIsSpinning(true);
     setSpinCompleted(false);
@@ -138,6 +145,7 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
     generateRandomSlots,
     calculateWinnings,
     resetWinResult,
+    playReelsBegin,
   ]);
 
   const value = {

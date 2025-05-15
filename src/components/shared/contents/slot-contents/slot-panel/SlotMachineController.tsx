@@ -9,15 +9,11 @@ interface SlotMachineControllerProps {
   }) => React.ReactNode;
 }
 
-/**
- * A controller component that manages the coordination between
- * multiple slot reels to ensure synchronized animations and proper
- * stopping positions.
- */
 const SlotMachineController: React.FC<SlotMachineControllerProps> = ({
   children,
 }) => {
-  const { isSpinning, slotValues, winResult } = useSlotMachine();
+  const { isSpinning, winResult, markSpinCompleted, resetWinResult } =
+    useSlotMachine();
   const [completedReels, setCompletedReels] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [reelStopOrder, setReelStopOrder] = useState<number[]>([]);
@@ -28,28 +24,39 @@ const SlotMachineController: React.FC<SlotMachineControllerProps> = ({
     setCompletedReels((prev) => prev + 1);
   };
 
-  // Reset state when spinning starts or stops
+  // Reset state when spinning starts
   useEffect(() => {
     if (isSpinning) {
+      // Reset animation state
       setCompletedReels(0);
       setReelStopOrder([]);
       setIsReady(false);
+
+      // Also ensure win result is reset
+      resetWinResult();
     } else {
       // When spinning stops, prepare for final positioning
       setIsReady(true);
     }
-  }, [isSpinning]);
+  }, [isSpinning, resetWinResult]);
 
-  // Log when all reels have completed (helpful for debugging)
+  // Mark spin as completed when all reels stop
   useEffect(() => {
-    if (completedReels === 3 && winResult?.isWin) {
-      // All reels have stopped and there's a win
-      console.log('All reels stopped in order:', reelStopOrder);
-      console.log('Win patterns:', winResult.winningPatterns);
-    }
-  }, [completedReels, winResult, reelStopOrder]);
+    if (completedReels === 3 && !isSpinning) {
+      // All reels have stopped, ready to show results
+      // Add a small delay to ensure animations complete
+      setTimeout(() => {
+        // Call the context function to mark the spin as completed
+        markSpinCompleted();
 
-  // Expose the controller state and functions to children
+        if (winResult?.isWin) {
+          console.log('All reels stopped in order:', reelStopOrder);
+          console.log('Win patterns:', winResult.winningPatterns);
+        }
+      }, 500);
+    }
+  }, [completedReels, markSpinCompleted, reelStopOrder, winResult, isSpinning]);
+
   return (
     <>
       {children({

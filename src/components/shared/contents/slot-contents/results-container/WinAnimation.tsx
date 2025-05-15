@@ -10,7 +10,6 @@ const WinAnimation: React.FC = () => {
     { x: number; y: number; size: number; color: string; delay: number }[]
   >([]);
 
-  // Generate particles on mount only
   useEffect(() => {
     const newParticles = Array(30)
       .fill(0)
@@ -28,7 +27,6 @@ const WinAnimation: React.FC = () => {
 
   return (
     <div className="slot-gradient-to-right px-5 py-4 w-full flex items-center justify-center gap-4 relative overflow-hidden">
-      {/* Confetti particles for win */}
       {particles.map((particle, index) => (
         <motion.div
           key={`particle-${index}`}
@@ -89,7 +87,6 @@ const WinAnimation: React.FC = () => {
           </motion.div>
         </motion.div>
 
-        {/* Radial glow effect */}
         <motion.div
           className="absolute inset-0 rounded-[8px] z-0"
           animate={{

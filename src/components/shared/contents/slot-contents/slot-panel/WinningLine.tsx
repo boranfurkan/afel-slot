@@ -29,7 +29,7 @@ const WinningLine: React.FC<WinningLineProps> = ({
 
   const rowCenterOffsets = [0, 0, 0];
 
-  const symbolCenterXOffset = -2;
+  const symbolCenterXOffset = 30;
   const symbolCenterYOffset = 0;
 
   const positions = useMemo(() => {

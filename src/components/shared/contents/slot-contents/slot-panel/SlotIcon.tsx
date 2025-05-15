@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Image from 'next/image';
 import { SlotIconType } from '@/types/app';
 
@@ -24,27 +24,16 @@ const SlotIcon: React.FC<SlotIconProps> = ({
     [SlotIconType.MEAT]: '/slot/slot-icon-meat.png',
   };
 
-  const iconScales: Partial<Record<SlotIconType, number>> = {
+  const iconScales = {
     [SlotIconType.TRUMP]: 0.75,
     [SlotIconType.SOLANA]: 0.75,
     [SlotIconType.MEAT]: 0.85,
+    [SlotIconType.CROCODILE]: 1,
+    [SlotIconType.HEAD]: 1,
+    [SlotIconType.AFEL]: 1,
   };
 
-  const iconPositionAdjustments: Partial<
-    Record<SlotIconType, { x: number; y: number }>
-  > = {
-    [SlotIconType.TRUMP]: { x: 0, y: 0 },
-    [SlotIconType.CROCODILE]: { x: 0, y: 0 },
-    [SlotIconType.HEAD]: { x: 0, y: 0 },
-    [SlotIconType.MEAT]: { x: 0, y: 0 },
-    [SlotIconType.SOLANA]: { x: 0, y: 0 },
-    [SlotIconType.AFEL]: { x: 0, y: 0 },
-  };
-
-  const iconPath = iconPaths[type];
-  const scaleFactor = iconScales[type] || 1;
-  const posAdjust = iconPositionAdjustments[type] || { x: 0, y: 0 };
-
+  const scaleFactor = iconScales[type];
   const displaySize = Math.floor(size * scaleFactor);
 
   return (
@@ -61,12 +50,11 @@ const SlotIcon: React.FC<SlotIconProps> = ({
         style={{
           width: displaySize,
           height: displaySize,
-          transform: `translate(${posAdjust.x}px, ${posAdjust.y}px)`,
           border: debug ? '1px solid blue' : 'none',
         }}
       >
         <Image
-          src={iconPath}
+          src={iconPaths[type]}
           width={displaySize}
           height={displaySize}
           alt={`Slot icon ${SlotIconType[type]}`}
@@ -78,4 +66,4 @@ const SlotIcon: React.FC<SlotIconProps> = ({
   );
 };
 
-export default SlotIcon;
+export default memo(SlotIcon);

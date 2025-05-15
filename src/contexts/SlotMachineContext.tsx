@@ -4,14 +4,12 @@ import React, {
   useState,
   useRef,
   useCallback,
-  useEffect,
 } from 'react';
 import { solToLamports } from '@/lib/utils';
 import { MOCK_USER_DATA } from '@/mock';
 import {
   WINNING_PATTERNS,
   ICON_MULTIPLIERS,
-  SPECIAL_COMBINATIONS,
   isFullMatch,
   checkSpecialCombination,
 } from '@/lib/win-patterns';
@@ -22,7 +20,7 @@ export interface WinningResult {
   multiplier: number;
   winningPatterns: number[][];
   winAmount: number;
-  timestamp: number; // Add a timestamp to force re-renders
+  timestamp: number;
 }
 
 interface SlotMachineContextType {
@@ -36,7 +34,7 @@ interface SlotMachineContextType {
   slotRefs: React.RefObject<any[]>;
   spinCompleted: boolean;
   markSpinCompleted: () => void;
-  resetWinResult: () => void; // New function to explicitly reset win result
+  resetWinResult: () => void;
 }
 
 const SlotMachineContext = createContext<SlotMachineContextType | undefined>(
@@ -49,9 +47,6 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
   const [slotValues, setSlotValues] = useState<SlotIconType[]>(
     Array(9).fill(SlotIconType.AFEL)
   );
-  const [previousSlotValues, setPreviousSlotValues] = useState<SlotIconType[]>(
-    Array(9).fill(SlotIconType.AFEL)
-  );
   const [isSpinning, setIsSpinning] = useState(false);
   const [betAmount, setBetAmount] = useState(0.1);
   const [winResult, setWinResult] = useState<WinningResult | null>(null);
@@ -60,17 +55,9 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const slotRefs = useRef<any[]>([]);
 
-  // Explicitly reset win result - can be called from components
   const resetWinResult = useCallback(() => {
     setWinResult(null);
   }, []);
-
-  // Force reset winResult when spinning starts
-  useEffect(() => {
-    if (isSpinning) {
-      resetWinResult();
-    }
-  }, [isSpinning, resetWinResult]);
 
   const generateRandomSlots = useCallback(() => {
     return Array(9)
@@ -111,7 +98,7 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
         multiplier: totalMultiplier,
         winningPatterns,
         winAmount,
-        timestamp: Date.now(), // Add timestamp to ensure uniqueness
+        timestamp: Date.now(),
       };
     },
     [betAmount]
@@ -125,60 +112,29 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
     if (isSpinning || !spinCompleted || solToLamports(betAmount) > userBalance)
       return;
 
-    // Reset win result at the start of each spin
     resetWinResult();
-
-    // Set states to indicate spinning
     setIsSpinning(true);
     setSpinCompleted(false);
-
-    // Deduct bet amount from balance
     setUserBalance((prev) => prev - solToLamports(betAmount));
 
-    setPreviousSlotValues(slotValues);
-
-    // Generate new slot values
     const newSlotValues = generateRandomSlots();
-
-    // Start the animation for each slot
-    if (slotRefs.current) {
-      slotRefs.current.forEach((ref, index) => {
-        if (ref) {
-          setTimeout(() => {
-            ref.startAnimation({
-              duration: 2 + Math.random() * 0.5,
-            });
-          }, (index % 3) * 200);
-        }
-      });
-    }
 
     setTimeout(() => {
       setSlotValues(newSlotValues);
-
-      // Calculate winnings
       const result = calculateWinnings(newSlotValues);
-
-      // End spinning state
       setIsSpinning(false);
 
-      // Add winnings to balance if there's a win
       if (result.isWin) {
         setUserBalance((prev) => prev + result.winAmount);
       }
 
-      // Set the result - will be displayed when spinCompleted is true
       setWinResult(result);
-
-      // Log for debugging
-      console.log('Spin completed, result:', result.isWin ? 'WIN' : 'LOSE');
     }, 3000);
   }, [
     isSpinning,
     spinCompleted,
     betAmount,
     userBalance,
-    slotValues,
     generateRandomSlots,
     calculateWinnings,
     resetWinResult,
@@ -195,7 +151,7 @@ export const SlotMachineProvider: React.FC<{ children: React.ReactNode }> = ({
     slotRefs,
     spinCompleted,
     markSpinCompleted,
-    resetWinResult, // Expose reset function
+    resetWinResult,
   };
 
   return (

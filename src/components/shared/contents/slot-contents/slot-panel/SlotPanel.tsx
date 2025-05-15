@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react';
 import Image from 'next/image';
 import { useSlotMachine } from '@/contexts/SlotMachineContext';
 import SlotReel from './SlotReel';
@@ -47,35 +47,33 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
     };
   }, []);
 
-  const getColumnValues = (columnIndex: number): SlotIconType[] => {
-    return [
-      slotValues[columnIndex],
-      slotValues[columnIndex + 3],
-      slotValues[columnIndex + 6],
-    ];
-  };
+  const getColumnValues = useCallback(
+    (columnIndex: number): SlotIconType[] => {
+      return [
+        slotValues[columnIndex],
+        slotValues[columnIndex + 3],
+        slotValues[columnIndex + 6],
+      ];
+    },
+    [slotValues]
+  );
 
-  const getWinningRowsForColumn = (columnIndex: number): number[] => {
-    if (!winResult || !winResult.isWin) return [];
+  const getWinningRowsForColumn = useCallback(
+    (columnIndex: number): number[] => {
+      if (!winResult || !winResult.isWin) return [];
 
-    return winResult.winningPatterns.flatMap((pattern) =>
-      pattern
-        .filter((index) => index % 3 === columnIndex)
-        .map((index) => Math.floor(index / 3))
-    );
-  };
+      return winResult.winningPatterns.flatMap((pattern) =>
+        pattern
+          .filter((index) => index % 3 === columnIndex)
+          .map((index) => Math.floor(index / 3))
+      );
+    },
+    [winResult]
+  );
 
   const reelDimensions = {
     height: '450px', // 3 rows at 150px each
   };
-
-  // Debug winning patterns
-  useEffect(() => {
-    if (winResult?.isWin && !isSpinning && completedReels === 3) {
-      console.log('Win detected! Patterns:', winResult.winningPatterns);
-      console.log('Container size:', containerSize);
-    }
-  }, [winResult, isSpinning, completedReels, containerSize]);
 
   // Check if we should show winning lines
   const showWinningLines =
@@ -117,11 +115,11 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
             ))}
           </div>
 
-          {/* Row indicators added last so they appear on top */}
+          {/* Row indicators */}
           <RowIndicator side="left" containerHeight={reelDimensions.height} />
           <RowIndicator side="right" containerHeight={reelDimensions.height} />
 
-          {/* Winning lines - simplified for debugging */}
+          {/* Winning lines */}
           {showWinningLines &&
             winResult.winningPatterns.map((pattern, index) => (
               <WinningLine
@@ -148,4 +146,4 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
   );
 };
 
-export default SlotPanel;
+export default memo(SlotPanel);

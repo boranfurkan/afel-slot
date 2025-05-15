@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { WinPatternType } from '@/lib/win-patterns';
 
@@ -25,13 +25,7 @@ const WinningLine: React.FC<WinningLineProps> = ({
   animationDuration = 2.5,
   debug = false,
 }) => {
-  const reelCenterOffsets = [0, 0, 0];
-
-  const rowCenterOffsets = [0, 0, 0];
-
-  const symbolCenterXOffset = 30;
-  const symbolCenterYOffset = 0;
-
+  // Calculate positions for each slot in the pattern
   const positions = useMemo(() => {
     return pattern.map((slotIndex) => {
       const row = Math.floor(slotIndex / 3);
@@ -39,7 +33,6 @@ const WinningLine: React.FC<WinningLineProps> = ({
 
       const paddingX = containerWidth * 0.04;
       const paddingY = containerHeight * 0.05;
-
       const gapX = containerWidth * 0.035;
 
       const availableWidth = containerWidth - paddingX * 2;
@@ -49,27 +42,17 @@ const WinningLine: React.FC<WinningLineProps> = ({
       const cellHeight = availableHeight / 3;
 
       return {
-        x:
-          paddingX +
-          col * (cellWidth + gapX) +
-          cellWidth / 2 +
-          reelCenterOffsets[col] +
-          symbolCenterXOffset,
-        y:
-          paddingY +
-          row * cellHeight +
-          cellHeight / 2 +
-          rowCenterOffsets[row] +
-          symbolCenterYOffset,
+        x: paddingX + col * (cellWidth + gapX) + cellWidth / 2 + 30, // Added X offset
+        y: paddingY + row * cellHeight + cellHeight / 2, // No Y offset needed
       };
     });
   }, [pattern, containerWidth, containerHeight]);
 
+  // Generate SVG path data
   const pathData = useMemo(() => {
     if (positions.length < 2) return '';
 
     let pathData = `M ${positions[0].x} ${positions[0].y}`;
-
     for (let i = 1; i < positions.length; i++) {
       pathData += ` L ${positions[i].x} ${positions[i].y}`;
     }
@@ -77,7 +60,8 @@ const WinningLine: React.FC<WinningLineProps> = ({
     return pathData;
   }, [positions]);
 
-  const getAnimationVariants = useMemo(() => {
+  // Animation variants based on pattern type
+  const variants = useMemo(() => {
     const baseTransition = {
       duration: animationDuration,
       ease: [0.22, 1, 0.36, 1],
@@ -90,86 +74,97 @@ const WinningLine: React.FC<WinningLineProps> = ({
     const isDiagonal = patternType.startsWith('diag');
     const isSpecial = patternType === WinPatternType.SPECIAL;
 
+    // Default animation for all pattern types
+    const defaultAnimation = {
+      line: {
+        initial: { pathLength: 0, opacity: 0 },
+        animate: {
+          pathLength: [0, 1, 1, 0],
+          opacity: [0.3, 1, 1, 0.3],
+          strokeWidth: [lineWidth, lineWidth + 2, lineWidth + 2, lineWidth],
+        },
+        transition: {
+          ...baseTransition,
+          times: [0, 0.3, 0.7, 1],
+        },
+      },
+      dot: {
+        initial: { scale: 0 },
+        animate: { scale: [0, 1.2, 1, 0] },
+        transition: baseTransition,
+      },
+    };
+
+    // Specific animations based on pattern type
     if (isRow) {
       return {
+        ...defaultAnimation,
         line: {
-          initial: { pathLength: 0, opacity: 0 },
+          ...defaultAnimation.line,
           animate: {
-            pathLength: [0, 1, 1, 0],
-            opacity: [0.3, 1, 1, 0.3],
+            ...defaultAnimation.line.animate,
             x: [0, 6, -6, 0],
-            strokeWidth: [lineWidth, lineWidth + 2, lineWidth + 2, lineWidth],
-          },
-          transition: {
-            ...baseTransition,
-            times: [0, 0.3, 0.7, 1],
           },
         },
         dot: {
-          initial: { scale: 0 },
+          ...defaultAnimation.dot,
           animate: {
-            scale: [0, 1.2, 1, 0],
+            ...defaultAnimation.dot.animate,
             x: [0, 3, -3, 0],
           },
-          transition: baseTransition,
         },
       };
-    } else if (isColumn) {
+    }
+
+    if (isColumn) {
       return {
+        ...defaultAnimation,
         line: {
-          initial: { pathLength: 0, opacity: 0 },
+          ...defaultAnimation.line,
           animate: {
-            pathLength: [0, 1, 1, 0],
-            opacity: [0.3, 1, 1, 0.3],
+            ...defaultAnimation.line.animate,
             y: [0, 6, -6, 0],
-            strokeWidth: [lineWidth, lineWidth + 2, lineWidth + 2, lineWidth],
-          },
-          transition: {
-            ...baseTransition,
-            times: [0, 0.3, 0.7, 1],
           },
         },
         dot: {
-          initial: { scale: 0 },
+          ...defaultAnimation.dot,
           animate: {
-            scale: [0, 1.2, 1, 0],
+            ...defaultAnimation.dot.animate,
             y: [0, 3, -3, 0],
           },
-          transition: baseTransition,
         },
       };
-    } else if (isDiagonal) {
+    }
+
+    if (isDiagonal) {
       return {
+        ...defaultAnimation,
         line: {
-          initial: { pathLength: 0, opacity: 0 },
+          ...defaultAnimation.line,
           animate: {
-            pathLength: [0, 1, 1, 0],
-            opacity: [0.3, 1, 1, 0.3],
+            ...defaultAnimation.line.animate,
             scale: [1, 1.05, 1.05, 1],
             rotate: [0, 0.5, -0.5, 0],
             strokeWidth: [lineWidth, lineWidth + 3, lineWidth + 3, lineWidth],
           },
-          transition: {
-            ...baseTransition,
-            times: [0, 0.3, 0.7, 1],
-          },
         },
         dot: {
-          initial: { scale: 0 },
+          ...defaultAnimation.dot,
           animate: {
-            scale: [0, 1.3, 1, 0],
+            ...defaultAnimation.dot.animate,
             rotate: [0, 180, 360, 540],
           },
-          transition: baseTransition,
         },
       };
-    } else if (isSpecial) {
+    }
+
+    if (isSpecial) {
       return {
+        ...defaultAnimation,
         line: {
-          initial: { pathLength: 0, opacity: 0 },
+          ...defaultAnimation.line,
           animate: {
-            pathLength: [0, 1, 1, 0],
-            opacity: [0.3, 1, 1, 0.3],
+            ...defaultAnimation.line.animate,
             scale: [1, 1.08, 0.95, 1],
             filter: [
               'brightness(1)',
@@ -184,14 +179,11 @@ const WinningLine: React.FC<WinningLineProps> = ({
               lineWidth,
             ],
           },
-          transition: {
-            ...baseTransition,
-            times: [0, 0.3, 0.7, 1],
-          },
         },
         dot: {
-          initial: { scale: 0 },
+          ...defaultAnimation.dot,
           animate: {
+            ...defaultAnimation.dot.animate,
             scale: [0, 1.5, 1.5, 0],
             filter: [
               'brightness(1)',
@@ -200,40 +192,15 @@ const WinningLine: React.FC<WinningLineProps> = ({
               'brightness(1)',
             ],
           },
-          transition: baseTransition,
-        },
-      };
-    } else {
-      return {
-        line: {
-          initial: { pathLength: 0, opacity: 0 },
-          animate: {
-            pathLength: [0, 1, 1, 0],
-            opacity: [0.3, 1, 1, 0.3],
-            strokeWidth: [
-              lineWidth,
-              lineWidth * 1.2,
-              lineWidth * 1.2,
-              lineWidth,
-            ],
-          },
-          transition: {
-            ...baseTransition,
-            times: [0, 0.3, 0.7, 1],
-          },
-        },
-        dot: {
-          initial: { scale: 0 },
-          animate: { scale: [0, 1.2, 1, 0] },
-          transition: baseTransition,
         },
       };
     }
+
+    return defaultAnimation;
   }, [patternType, animationDuration, lineWidth]);
 
-  const variants = getAnimationVariants;
-
-  const getPatternColor = useMemo(() => {
+  // Get pattern color based on type
+  const patternColor = useMemo(() => {
     switch (patternType) {
       case WinPatternType.ROW_1:
       case WinPatternType.ROW_2:
@@ -253,39 +220,21 @@ const WinningLine: React.FC<WinningLineProps> = ({
     }
   }, [patternType, color]);
 
-  const getPatternGlowColor = useMemo(() => {
+  // Get glow color based on pattern color
+  const patternGlowColor = useMemo(() => {
     if (glowColor) return glowColor;
 
-    const baseColor = getPatternColor.replace(/[^,]+(?=\))/, '0.3');
-    return baseColor.startsWith('#')
-      ? `rgba(${parseInt(baseColor.slice(1, 3), 16)}, ${parseInt(
-          baseColor.slice(3, 5),
-          16
-        )}, ${parseInt(baseColor.slice(5, 7), 16)}, 0.3)`
-      : baseColor;
-  }, [getPatternColor, glowColor]);
+    if (patternColor.startsWith('#')) {
+      const r = parseInt(patternColor.slice(1, 3), 16);
+      const g = parseInt(patternColor.slice(3, 5), 16);
+      const b = parseInt(patternColor.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.3)`;
+    }
 
-  const actualColor = getPatternColor;
-  const actualGlowColor = getPatternGlowColor;
+    return patternColor.replace(/[^,]+(?=\))/, '0.3');
+  }, [patternColor, glowColor]);
+
   const isSpecial = patternType === WinPatternType.SPECIAL;
-
-  // Dynamic calibration mode
-  const [calibrationMode, setCalibrationMode] = useState(false);
-
-  // Allow toggling calibration mode with key press in development
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'c' && process.env.NODE_ENV === 'development') {
-        setCalibrationMode((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
-
-  // Use debug mode from props or calibration mode from state
-  const showDebugMarkers = debug || calibrationMode;
 
   return (
     <svg
@@ -302,7 +251,7 @@ const WinningLine: React.FC<WinningLineProps> = ({
       </defs>
 
       {/* Debug grid overlay */}
-      {showDebugMarkers && (
+      {debug && (
         <g className="debug-grid">
           {/* Vertical grid lines */}
           {[0, 1, 2, 3].map((i) => (
@@ -332,9 +281,10 @@ const WinningLine: React.FC<WinningLineProps> = ({
         </g>
       )}
 
+      {/* Glow background path */}
       <motion.path
         d={pathData}
-        stroke={actualGlowColor}
+        stroke={patternGlowColor}
         strokeWidth={lineWidth + 8}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -344,9 +294,10 @@ const WinningLine: React.FC<WinningLineProps> = ({
         transition={variants.line.transition}
       />
 
+      {/* Main path */}
       <motion.path
         d={pathData}
-        stroke={actualColor}
+        stroke={patternColor}
         strokeWidth={lineWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -354,16 +305,17 @@ const WinningLine: React.FC<WinningLineProps> = ({
         initial={variants.line.initial}
         animate={variants.line.animate}
         transition={variants.line.transition}
-        style={{ filter: `drop-shadow(0 0 8px ${actualColor})` }}
+        style={{ filter: `drop-shadow(0 0 8px ${patternColor})` }}
       />
 
+      {/* Position marker dots */}
       {positions.map((pos, index) => {
         const positionRatio = index / (positions.length - 1);
 
         return (
           <React.Fragment key={`position-${index}-${pattern.join('-')}`}>
-            {/* Debug marker for position center points */}
-            {showDebugMarkers && (
+            {/* Debug marker */}
+            {debug && (
               <circle
                 cx={pos.x}
                 cy={pos.y}
@@ -374,11 +326,12 @@ const WinningLine: React.FC<WinningLineProps> = ({
               />
             )}
 
+            {/* Glow circle */}
             <motion.circle
               cx={pos.x}
               cy={pos.y}
               r={16}
-              fill={actualGlowColor}
+              fill={patternGlowColor}
               initial={{ scale: 0 }}
               animate={{
                 scale: [0, 1, 1, 0],
@@ -398,11 +351,12 @@ const WinningLine: React.FC<WinningLineProps> = ({
               }}
             />
 
+            {/* Main circle */}
             <motion.circle
               cx={pos.x}
               cy={pos.y}
               r={10}
-              fill={actualColor}
+              fill={patternColor}
               initial={{ scale: 0 }}
               animate={{
                 scale: [0, 1, 1, 0],
@@ -420,88 +374,13 @@ const WinningLine: React.FC<WinningLineProps> = ({
                 repeat: Infinity,
                 repeatDelay: 0.2,
               }}
-              style={{ filter: `drop-shadow(0 0 6px ${actualColor})` }}
+              style={{ filter: `drop-shadow(0 0 6px ${patternColor})` }}
             />
-
-            <motion.g>
-              {Array.from({ length: isSpecial ? 12 : 8 }).map(
-                (_, particleIndex) => {
-                  const angleOffset = Math.random() * 0.5;
-                  const angle =
-                    (particleIndex / (isSpecial ? 12 : 8)) * Math.PI * 2 +
-                    angleOffset;
-                  const distance = isSpecial
-                    ? 25 + Math.random() * 10
-                    : 15 + Math.random() * 8;
-                  const particleSize = isSpecial
-                    ? 2 + Math.random() * 3
-                    : 1.5 + Math.random() * 2;
-                  const speedVariation = 0.8 + Math.random() * 0.4;
-
-                  return (
-                    <motion.circle
-                      key={`particle-${index}-${particleIndex}`}
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={particleSize}
-                      fill={actualColor}
-                      initial={{ scale: 0, x: 0, y: 0, opacity: 0 }}
-                      animate={{
-                        scale: [0, 1, 0],
-                        x: [
-                          0,
-                          Math.cos(angle) * distance * 0.5,
-                          Math.cos(angle) * distance,
-                        ],
-                        y: [
-                          0,
-                          Math.sin(angle) * distance * 0.5,
-                          Math.sin(angle) * distance,
-                        ],
-                        opacity: [0, 0.9, 0],
-                      }}
-                      transition={{
-                        duration: isSpecial
-                          ? 1.2 * speedVariation
-                          : 0.8 * speedVariation,
-                        ease: 'easeOut',
-                        delay: positionRatio * 0.3 * animationDuration,
-                        repeat: Infinity,
-                        repeatDelay: animationDuration + 0.2,
-                      }}
-                      style={{ filter: `blur(${isSpecial ? 1 : 0.5}px)` }}
-                    />
-                  );
-                }
-              )}
-            </motion.g>
-
-            {isSpecial && (
-              <motion.circle
-                cx={pos.x}
-                cy={pos.y}
-                r={25}
-                fill="none"
-                stroke={actualColor}
-                strokeWidth={1}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 1.5, 2.5],
-                  opacity: [0, 0.5, 0],
-                }}
-                transition={{
-                  duration: 1.5,
-                  ease: 'easeOut',
-                  delay: positionRatio * 0.3 * animationDuration,
-                  repeat: Infinity,
-                  repeatDelay: animationDuration + 0.2,
-                }}
-              />
-            )}
           </React.Fragment>
         );
       })}
 
+      {/* Special effect for special patterns */}
       {isSpecial && (
         <motion.rect
           x={0}
@@ -521,7 +400,7 @@ const WinningLine: React.FC<WinningLineProps> = ({
           }}
           style={{
             filter: `blur(20px)`,
-            background: `radial-gradient(circle at center, ${actualColor}44 0%, transparent 70%)`,
+            background: `radial-gradient(circle at center, ${patternColor}44 0%, transparent 70%)`,
           }}
         />
       )}
@@ -529,4 +408,4 @@ const WinningLine: React.FC<WinningLineProps> = ({
   );
 };
 
-export default React.memo(WinningLine);
+export default memo(WinningLine);

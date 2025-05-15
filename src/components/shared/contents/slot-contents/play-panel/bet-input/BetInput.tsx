@@ -1,8 +1,8 @@
+import { useCallback } from 'react';
 import ArrowDownIcon from '@/assets/icons/ArrowDownIcon';
 import ArrowUpIcon from '@/assets/icons/ArrowUpIcon';
 import { useSlotMachine } from '@/contexts/SlotMachineContext';
 import { lamportsToSol } from '@/lib/utils';
-import React from 'react';
 
 const BetInput = () => {
   const { userBalance, betAmount, setBetAmount, isSpinning } = useSlotMachine();
@@ -10,37 +10,40 @@ const BetInput = () => {
   const maxBalance = parseFloat(lamportsToSol(userBalance));
   const isError = betAmount > maxBalance;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isSpinning) return;
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (isSpinning) return;
 
-    if (e.target.value === '') {
-      setBetAmount(0);
-      return;
-    }
+      if (e.target.value === '') {
+        setBetAmount(0);
+        return;
+      }
 
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      setBetAmount(value);
-    }
-  };
+      const value = parseFloat(e.target.value);
+      if (!isNaN(value)) {
+        setBetAmount(value);
+      }
+    },
+    [isSpinning, setBetAmount]
+  );
 
-  const increaseValue = () => {
+  const increaseValue = useCallback(() => {
     if (isSpinning) return;
 
     const newValue = betAmount + 0.1;
-    const roundedValue = Math.round(newValue * 10) / 10; // Round to 1 decimal place
+    const roundedValue = Math.round(newValue * 10) / 10;
     if (roundedValue <= maxBalance) {
       setBetAmount(roundedValue);
     }
-  };
+  }, [isSpinning, betAmount, maxBalance, setBetAmount]);
 
-  const decreaseValue = () => {
+  const decreaseValue = useCallback(() => {
     if (isSpinning) return;
 
     const newValue = Math.max(0.1, betAmount - 0.1);
-    const roundedValue = Math.round(newValue * 10) / 10; // Round to 1 decimal place
+    const roundedValue = Math.round(newValue * 10) / 10;
     setBetAmount(roundedValue);
-  };
+  }, [isSpinning, betAmount, setBetAmount]);
 
   return (
     <div className="relative w-full mt-7">

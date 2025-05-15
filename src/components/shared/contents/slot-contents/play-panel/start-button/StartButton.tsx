@@ -1,5 +1,5 @@
+import React, { memo } from 'react';
 import ArrowRightIcon from '@/assets/icons/ArrowRightIcon';
-import React from 'react';
 import { motion } from 'framer-motion';
 import { useSlotMachine } from '@/contexts/SlotMachineContext';
 import { lamportsToSol } from '@/lib/utils';
@@ -31,4 +31,4 @@ const StartButton = () => {
   );
 };
 
-export default StartButton;
+export default memo(StartButton);

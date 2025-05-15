@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Image from 'next/image';
 
 const AfelLogo = () => {
@@ -18,4 +18,4 @@ const AfelLogo = () => {
   );
 };
 
-export default AfelLogo;
+export default memo(AfelLogo);

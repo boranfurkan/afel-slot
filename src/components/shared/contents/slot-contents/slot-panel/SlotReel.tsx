@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 import SlotIcon from './SlotIcon';
@@ -20,7 +20,7 @@ const SlotReel: React.FC<SlotReelProps> = ({
   winningRows,
   onReelStop,
 }) => {
-  const slotHeight = 150; // Height of each slot
+  const slotHeight = 150;
 
   const { reelRef, reelContainerRef, boxesRef, reelIcons } = useReelAnimation({
     columnIndex,
@@ -35,15 +35,12 @@ const SlotReel: React.FC<SlotReelProps> = ({
       ref={reelRef}
       className="relative h-full overflow-hidden border-2 border-[#6c924a]/50 rounded-md bg-gradient-to-b from-white/30 to-white/5"
     >
-      {/* Reel container */}
       <div ref={reelContainerRef} className="absolute inset-0 overflow-hidden">
-        {/* Vertical lines for slot effect */}
         <div className="absolute inset-0 flex justify-between pointer-events-none">
           <div className="h-full w-px bg-white/20"></div>
           <div className="h-full w-px bg-white/20"></div>
         </div>
 
-        {/* Slot boxes */}
         {reelIcons.map((iconType, index) => (
           <div
             key={`slot-box-${columnIndex}-${index}`}
@@ -65,11 +62,9 @@ const SlotReel: React.FC<SlotReelProps> = ({
         ))}
       </div>
 
-      {/* Visual slot frame overlays */}
       <div className="absolute inset-x-0 top-0 h-[10px] pointer-events-none bg-gradient-to-b from-white/10 to-transparent z-10"></div>
       <div className="absolute inset-x-0 bottom-0 h-[10px] pointer-events-none bg-gradient-to-t from-white/10 to-transparent z-10"></div>
 
-      {/* Win highlight effects */}
       {winningRows.map(
         (rowIndex) =>
           !isSpinning && (
@@ -106,4 +101,4 @@ const SlotReel: React.FC<SlotReelProps> = ({
   );
 };
 
-export default SlotReel;
+export default memo(SlotReel);

@@ -6,14 +6,12 @@ interface SlotIconProps {
   type: SlotIconType;
   size?: number;
   className?: string;
-  debug?: boolean;
 }
 
 const SlotIcon: React.FC<SlotIconProps> = ({
   type,
   size = 80,
   className = '',
-  debug = false,
 }) => {
   const iconPaths = {
     [SlotIconType.AFEL]: '/slot/slot-icon-afel.png',
@@ -42,7 +40,6 @@ const SlotIcon: React.FC<SlotIconProps> = ({
       style={{
         width: size,
         height: size,
-        border: debug ? '1px dashed red' : 'none',
       }}
     >
       <div
@@ -50,7 +47,6 @@ const SlotIcon: React.FC<SlotIconProps> = ({
         style={{
           width: displaySize,
           height: displaySize,
-          border: debug ? '1px solid blue' : 'none',
         }}
       >
         <Image

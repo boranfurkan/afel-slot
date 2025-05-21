@@ -217,3 +217,12 @@ input[type='number'] {
 .win-pulse {
   animation: pulse-no-clip 1.5s infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

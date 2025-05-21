@@ -4,6 +4,7 @@ import SlotPanel from './slot-panel/SlotPanel';
 import { SlotMachineProvider } from '@/contexts/SlotMachineContext';
 import SlotMachineController from './slot-panel/SlotMachineController';
 import ResultContainer from './results-container';
+import LastWinsDisplay from './last-wins-show/LastWinsDisplay';
 
 const SlotContents = () => {
   return (
@@ -22,6 +23,7 @@ const SlotContents = () => {
             )}
           </SlotMachineController>
         </div>
+        <LastWinsDisplay />
       </div>
     </SlotMachineProvider>
   );

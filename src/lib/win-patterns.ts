@@ -4,11 +4,8 @@ export const WINNING_PATTERNS = [
   [0, 1, 2], // Row 1
   [3, 4, 5], // Row 2
   [6, 7, 8], // Row 3
-  [0, 3, 6], // Column 1
-  [1, 4, 7], // Column 2
-  [2, 5, 8], // Column 3
-  [0, 4, 8], // Diagonal 1
-  [2, 4, 6], // Diagonal 2
+  [0, 4, 8], // Diagonal 1 (top-left to bottom-right)
+  [2, 4, 6], // Diagonal 2 (top-right to bottom-left)
 ];
 
 // Visualize pattern types for UI paths
@@ -73,8 +70,8 @@ export function getWinPatternType(pattern: number[]): WinPatternType {
     return WinPatternType.ROW_2;
   if (pattern[0] === 6 && pattern[1] === 7 && pattern[2] === 8)
     return WinPatternType.ROW_3;
-  if (pattern[0] === 0 && pattern[1] === 3 && pattern[2] === 6)
-    return WinPatternType.DIAGONAL_1;
+  if (pattern[0] === 0 && pattern[1] === 4 && pattern[2] === 8)
+    return WinPatternType.DIAGONAL_1; // Fixed diagonal pattern
   if (pattern[0] === 2 && pattern[1] === 4 && pattern[2] === 6)
     return WinPatternType.DIAGONAL_2;
   return WinPatternType.SPECIAL;

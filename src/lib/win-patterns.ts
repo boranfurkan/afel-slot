@@ -16,9 +16,6 @@ export enum WinPatternType {
   ROW_1 = 'row1',
   ROW_2 = 'row2',
   ROW_3 = 'row3',
-  COLUMN_1 = 'col1',
-  COLUMN_2 = 'col2',
-  COLUMN_3 = 'col3',
   DIAGONAL_1 = 'diag1', // top-left to bottom-right
   DIAGONAL_2 = 'diag2', // top-right to bottom-left
   SPECIAL = 'special',
@@ -77,12 +74,6 @@ export function getWinPatternType(pattern: number[]): WinPatternType {
   if (pattern[0] === 6 && pattern[1] === 7 && pattern[2] === 8)
     return WinPatternType.ROW_3;
   if (pattern[0] === 0 && pattern[1] === 3 && pattern[2] === 6)
-    return WinPatternType.COLUMN_1;
-  if (pattern[0] === 1 && pattern[1] === 4 && pattern[2] === 7)
-    return WinPatternType.COLUMN_2;
-  if (pattern[0] === 2 && pattern[1] === 5 && pattern[2] === 8)
-    return WinPatternType.COLUMN_3;
-  if (pattern[0] === 0 && pattern[1] === 4 && pattern[2] === 8)
     return WinPatternType.DIAGONAL_1;
   if (pattern[0] === 2 && pattern[1] === 4 && pattern[2] === 6)
     return WinPatternType.DIAGONAL_2;
@@ -150,48 +141,6 @@ export function calculateWinningLinePath(
         controlY1: points[0].y + slotHeight / 3, // Curve downward
         controlX2: points[2].x - reelWidth / 2,
         controlY2: points[2].y + slotHeight / 3, // Curve downward
-        pathType: patternType,
-      };
-
-    // Column 1 (left)
-    case WinPatternType.COLUMN_1:
-      return {
-        startX: points[0].x,
-        startY: -10,
-        endX: points[2].x,
-        endY: containerHeight + 10,
-        controlX1: points[0].x - reelWidth / 4,
-        controlY1: points[0].y + slotHeight,
-        controlX2: points[2].x - reelWidth / 4,
-        controlY2: points[2].y - slotHeight,
-        pathType: patternType,
-      };
-
-    // Column 2 (middle)
-    case WinPatternType.COLUMN_2:
-      return {
-        startX: points[0].x,
-        startY: -10,
-        endX: points[2].x,
-        endY: containerHeight + 10,
-        controlX1: points[0].x + reelWidth / 8,
-        controlY1: points[0].y + slotHeight,
-        controlX2: points[2].x - reelWidth / 8,
-        controlY2: points[2].y - slotHeight,
-        pathType: patternType,
-      };
-
-    // Column 3 (right)
-    case WinPatternType.COLUMN_3:
-      return {
-        startX: points[0].x,
-        startY: -10,
-        endX: points[2].x,
-        endY: containerHeight + 10,
-        controlX1: points[0].x + reelWidth / 4,
-        controlY1: points[0].y + slotHeight,
-        controlX2: points[2].x + reelWidth / 4,
-        controlY2: points[2].y - slotHeight,
         pathType: patternType,
       };
 

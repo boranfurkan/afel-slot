@@ -10,6 +10,7 @@
     "codegen": "orval --config orval.config.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.76.1",
     "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

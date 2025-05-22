@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import TabHeadings from './tab-headings/TabHeadings';
 import { AnimatePresence, motion } from 'framer-motion';
 import SlotContents from '../contents/slot-contents';
+import FlipContents from '../contents/flip-contents';
 
 const TabSystem = () => {
   const [activeTab, setActiveTab] = useState(GameTabs.SLOT);
@@ -61,14 +62,14 @@ const TabSystem = () => {
                 </motion.div>
               </div>
             ) : (
-              <div className="w-full h-full border-[1.5px] border-t-0 border-border rounded-b-[37.37px] bg-dark-bg">
+              <div className="w-full min-h-screen border-[1.5px] border-t-0 border-border bg-dark-bg">
                 <motion.div
                   className="w-full h-full flex items-center justify-center"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  Coin Flip Content
+                  <FlipContents />
                 </motion.div>
               </div>
             )}

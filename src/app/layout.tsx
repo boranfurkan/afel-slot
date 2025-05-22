@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { freePixelFont, supplyMediumFont } from "@/assets/fonts";
-import Providers from "@/contexts/Providers";
+import Providers from "@/providers";
 
 import "@/styles/globals.css";
 

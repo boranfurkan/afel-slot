@@ -1,14 +1,17 @@
+import React, { memo } from 'react';
 import ArrowRightIcon from '@/assets/icons/ArrowRightIcon';
-import React from 'react';
 import { motion } from 'framer-motion';
 import { useSlotMachine } from '@/contexts/SlotMachineContext';
 import { lamportsToSol } from '@/lib/utils';
 
 const StartButton = () => {
-  const { spinSlots, isSpinning, betAmount, userBalance } = useSlotMachine();
+  const { spinSlots, isSpinning, betAmount, userBalance, spinCompleted } =
+    useSlotMachine();
 
   const canSpin =
-    !isSpinning && parseFloat(lamportsToSol(userBalance)) >= betAmount;
+    !isSpinning &&
+    spinCompleted &&
+    parseFloat(lamportsToSol(userBalance)) >= betAmount;
 
   return (
     <motion.div
@@ -22,10 +25,10 @@ const StartButton = () => {
     >
       <ArrowRightIcon width={24} height={47} />
       <span className="font-normal text-[77.25px] leading-[100%] tracking-[0%] text-right align-middle">
-        {isSpinning ? 'SPINNING' : 'START'}
+        {isSpinning ? 'SPINNING' : spinCompleted ? 'START' : 'WAITING'}
       </span>
     </motion.div>
   );
 };
 
-export default StartButton;
+export default memo(StartButton);

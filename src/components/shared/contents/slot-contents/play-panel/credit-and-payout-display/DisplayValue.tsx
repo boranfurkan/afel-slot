@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 interface DisplayValueProps {
@@ -47,4 +47,4 @@ const DisplayValue = ({
   );
 };
 
-export default DisplayValue;
+export default memo(DisplayValue);

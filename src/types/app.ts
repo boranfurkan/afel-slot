@@ -11,3 +11,5 @@ export enum SlotIconType {
   AFEL = 5,
   SOLANA = 6,
 }
+
+export type FlipSide = 'HEADS' | 'TAILS';

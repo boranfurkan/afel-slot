@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, memo } from 'react';
+import useSound from 'use-sound';
 import { useSlotMachine } from '@/contexts/SlotMachineContext';
 
 interface SlotMachineControllerProps {
@@ -9,47 +10,50 @@ interface SlotMachineControllerProps {
   }) => React.ReactNode;
 }
 
-/**
- * A controller component that manages the coordination between
- * multiple slot reels to ensure synchronized animations and proper
- * stopping positions.
- */
 const SlotMachineController: React.FC<SlotMachineControllerProps> = ({
   children,
 }) => {
-  const { isSpinning, slotValues, winResult } = useSlotMachine();
+  const { isSpinning, winResult, markSpinCompleted, resetWinResult } =
+    useSlotMachine();
   const [completedReels, setCompletedReels] = useState(0);
   const [isReady, setIsReady] = useState(false);
-  const [reelStopOrder, setReelStopOrder] = useState<number[]>([]);
 
-  // Track which reels have completed their animation
-  const handleReelStop = (columnIndex: number) => {
-    setReelStopOrder((prev) => [...prev, columnIndex]);
+  const [playReelsEnd] = useSound('/sounds/reels-end.mp3');
+
+  const handleReelStop = useCallback((columnIndex: number) => {
     setCompletedReels((prev) => prev + 1);
-  };
+  }, []);
 
-  // Reset state when spinning starts or stops
   useEffect(() => {
     if (isSpinning) {
+      // Reset animation state
       setCompletedReels(0);
-      setReelStopOrder([]);
       setIsReady(false);
+
+      // Also ensure win result is reset
+      resetWinResult();
     } else {
       // When spinning stops, prepare for final positioning
       setIsReady(true);
     }
-  }, [isSpinning]);
+  }, [isSpinning, resetWinResult]);
 
-  // Log when all reels have completed (helpful for debugging)
+  // Mark spin as completed when all reels stop
   useEffect(() => {
-    if (completedReels === 3 && winResult?.isWin) {
-      // All reels have stopped and there's a win
-      console.log('All reels stopped in order:', reelStopOrder);
-      console.log('Win patterns:', winResult.winningPatterns);
-    }
-  }, [completedReels, winResult, reelStopOrder]);
+    if (completedReels === 3 && !isSpinning) {
+      // Play reels end sound when all reels have stopped
+      playReelsEnd();
 
-  // Expose the controller state and functions to children
+      // Add a small delay to ensure animations complete
+      const timer = setTimeout(() => {
+        // Call the context function to mark the spin as completed
+        markSpinCompleted();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [completedReels, markSpinCompleted, isSpinning, playReelsEnd]);
+
   return (
     <>
       {children({
@@ -61,4 +65,4 @@ const SlotMachineController: React.FC<SlotMachineControllerProps> = ({
   );
 };
 
-export default SlotMachineController;
+export default memo(SlotMachineController);

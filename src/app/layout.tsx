@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { freePixelFont, supplyMediumFont } from '@/assets/fonts';
 
 import '@/styles/globals.css';
+import Providers from '@/providers';
 
 export const metadata: Metadata = {
   title: 'AFEL SLOT',
@@ -18,7 +19,7 @@ export default function RootLayout({
       <body
         className={`${freePixelFont.className} ${supplyMediumFont.variable} antialiased container dark`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

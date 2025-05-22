@@ -1,19 +1,32 @@
-'use client';
-import { FlipProvider } from '@/contexts/FlipContext';
-import { SlotMachineProvider } from '@/contexts/SlotMachineContext';
-import React from 'react';
+"use client";
 
-interface ProvidersProps {
-  children: React.ReactNode;
-}
+import { FlipProvider } from "@/contexts/FlipContext";
+import { SlotMachineProvider } from "@/contexts/SlotMachineContext";
+import AppWalletProvider from "@/contexts/WalletContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 
-const Providers = ({ children }: ProvidersProps) => {
+const Providers = ({ children }: { children: React.ReactNode }) => {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            retry: 3,
+          },
+        },
+      })
+  );
+
   return (
-    <div>
-      <SlotMachineProvider>
-        <FlipProvider>{children}</FlipProvider>
-      </SlotMachineProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AppWalletProvider>
+        <SlotMachineProvider>
+          <FlipProvider>{children}</FlipProvider>
+        </SlotMachineProvider>
+      </AppWalletProvider>
+    </QueryClientProvider>
   );
 };
 

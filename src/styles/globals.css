@@ -226,3 +226,11 @@ input[type='number'] {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.flip-distribution-gradient {
+  background: linear-gradient(180deg, #ff8000 0%, #78ff00 100%);
+}
+
+.flip-button-gradient {
+  background: linear-gradient(180deg, #00e5ce 0%, #78ff00 100%);
+}

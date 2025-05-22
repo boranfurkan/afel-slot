@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import backgroundImage from '../../../../../public/flip-background.png';
 import FlipDetails from './info-section/FlipDetails';
+import PlayPanel from './play-panel';
 
 const FlipContents = () => {
   return (
@@ -15,6 +16,9 @@ const FlipContents = () => {
 
       <div className="relative w-full h-full z-20">
         <FlipDetails />
+        <div className="max-w-lg mx-auto w-full h-full flex items-center justify-center">
+          <PlayPanel />
+        </div>
       </div>
     </div>
   );
